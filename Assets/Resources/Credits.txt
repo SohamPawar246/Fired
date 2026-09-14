@@ -1,0 +1,29 @@
+<size=170%><color=#FFE600>FIRED.</color></size>
+<size=90%><color=#00F0FF>you are the bullet</color></size>
+
+
+<size=120%><color=#00F0FF>— A Game By —</color></size>
+
+<size=130%><b>Soham Pawar</b></size>
+
+
+<size=120%><color=#00F0FF>— Assets —</color></size>
+
+Blaster Kit, Modular Buildings & Sounds
+<color=#8B7FB8>Kenney — kenney.nl (CC0)</color>
+
+Cyberpunk Game Kit
+<color=#8B7FB8>level environment</color>
+
+Characters & Animations
+<color=#8B7FB8>Mixamo</color>
+
+
+<size=120%><color=#00F0FF>— Tools —</color></size>
+
+Made with Unity 6
+
+
+<size=120%><color=#00F0FF>— Thanks —</color></size>
+
+You, for playing!
