@@ -20,7 +20,7 @@ public static class GunSelectBuilder
 {
     private const string GunDir = "Assets/Gun/kenney_blasterKit/Models/FBX format";
 
-    [UnityEditor.MenuItem("Tools/Jam Scaffold/Build Gun Select (both scenes)")]
+    [UnityEditor.MenuItem("Tools/FIRED/Build Gun Select (both scenes)")]
     public static void Build()
     {
         var guns = LoadGuns();

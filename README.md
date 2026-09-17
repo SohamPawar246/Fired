@@ -1,33 +1,111 @@
 # FIRED. — you are the bullet
 
-**▶ Play in your browser: [sohampawar.itch.io/fired](https://sohampawar.itch.io/fired)**
+**▶ Play in your browser: [sohampawar.itch.io/fired](https://sohampawar.itch.io/fired)** — one click, nothing to install.
 
-Steer a fired bullet through an endless cyberpunk station — speed is your health,
-ricochets are your enemy, and skulls are worth the detour. Made for a game jam by
-**Soham Pawar** (Unity 6 · URP · WebGL).
+Fired from a gun in the opening frame, you never stop flying. Mouse steers, walls
+deflect you instead of killing you, and **speed is your health**. An endless runner
+whose fail state is interesting: every mistake leaves you alive, pointed somewhere
+you didn't choose, bleeding speed.
+
+Unity **6000.3** · URP · New Input System · WebGL-first (Windows builds too).
+By **Soham Pawar**.
 
 ---
 
-# Indie Connect — Game Jam Shell
+## ⚠ Cloning this repo
 
-Pre-built "professional shell" for the jam: every menu, transition, and system that
-isn't the game itself, so jam time goes 100% into gameplay. Unity **6000.3** · **URP** ·
-**New Input System** · **uGUI + TextMeshPro** · WebGL-first (Windows works too).
+All binary assets (models, textures, audio, video — ~1,300 files) are stored with
+**Git LFS**. GitHub's **"Download ZIP" button does not resolve LFS**: you would get
+~1,300 text pointer files and the project would open with no art, no audio and empty
+meshes.
 
-## Scene flow (this is also the Build Settings order)
+```bash
+# Install Git LFS once, then:
+git lfs install
+git clone https://github.com/SohamPawar246/Fired.git
+```
+
+Sanity check after cloning — this file should be ~94 MB, not ~130 bytes:
+
+```bash
+ls -l Assets/Gunplay.fbx
+```
+
+Open with Unity **6000.3** or newer. First import takes a few minutes.
+
+---
+
+## Controls
+
+| Input | Action |
+|---|---|
+| **Mouse** | Steer |
+| **Left click** | Fire (opening shot only) |
+| **Right mouse** | Deadeye — slow time to line up a shot, drains a meter |
+| **R** | Restart instantly from the results screen |
+| **Esc / P** | Pause |
+
+Gamepad is supported throughout, including menu navigation.
+
+---
+
+## The loop
+
+Fly fast, thread targets to refuel, survive your own mistakes. Speed drains
+continuously, targets refund it, walls tax it — a head-on slam costs 16% of your
+speed, a graze 7%. Run out and you fall out of the air.
+
+The run escalates through three environments as you get deeper:
+
+| Zone | From | Look |
+|---|---|---|
+| **STATION** | 0 m | Clean neon station — the onboarding zone |
+| **THE CAVES** | 150 m | Warm rock, twistier layouts |
+| **THE DEPTHS** | 400 m | Cold violet stone, turn-heavy |
+
+---
+
+## The day-1 hook — what to look for
+
+Best distance, best score, furthest zone and total runs persist across sessions
+(PlayerPrefs, so they survive a browser refresh).
+
+- `BEST 240 m` sits under the score the whole time you fly.
+- **NEW BEST fires the instant you pass your record, mid-flight** — not on the
+  results screen. The record is snapshotted at run start so it fires once, at the
+  right metre, while you are still live and can extend it.
+- The results card always frames the gap: *"60 m short of your best (180 m)"*.
+- **R restarts in ~1.25 s** from a single keypress. The opening cinematic plays once
+  per session; retries drop straight into flight.
+
+---
+
+## Where to look in the code
+
+| Concern | File |
+|---|---|
+| Run orchestration, HUD, scoring, Deadeye, records | `Scripts/Game/FiredGameController.cs` |
+| Flight, steering, ricochet, stall and fall | `Scripts/Game/BulletController.cs` |
+| Endless level streaming, zones, wrong-way handling | `Scripts/Game/ModuleStreamer.cs` |
+| Persistence (settings **and** records) | `Scripts/Core/SaveSystem.cs` |
+| Speed gauge states, danger redline, leading cap | `Scripts/UI/SpeedGauge.cs` |
+| Scoring targets placed by the designer | `Scripts/Game/FiredTarget.cs`, `LevelInfo.cs` |
+| Palette and colour-meaning rules | `Scripts/Core/Theme.cs` |
+
+---
+
+## Architecture notes
+
+**Scene flow** (also the Build Settings order):
 
 ```
-Boot → StudioIntro → EpilepsyWarning → MainMenu → Game → (Credits loops back to MainMenu)
-                                          ↑________________|
+Boot → StudioIntro → EpilepsyWarning → MainMenu → Game → (Credits → MainMenu)
 ```
 
-- **Pause menu** and **Game Over / Win screen** are overlays inside the `Game` scene, not scenes.
-- **Every scene is independently playable** — hit Play in any scene. A persistent
-  `GameManager` auto-spawns from `Assets/Resources/GameManager.prefab` before the first
-  scene loads (see `GameManager.Bootstrap`), so nothing depends on Boot running first.
-- `SampleScene` is Unity's template leftover — not in the build, safe to delete.
-
-## The one rule
+Pause and the results screen are overlays inside `Game`, not separate scenes. Every
+scene is independently playable — a persistent `GameManager` auto-spawns from
+`Resources/GameManager.prefab` before the first scene loads, so nothing depends on
+Boot having run.
 
 **Never call `SceneManager.LoadScene` directly.** Always:
 
@@ -35,127 +113,77 @@ Boot → StudioIntro → EpilepsyWarning → MainMenu → Game → (Credits loop
 GameManager.Instance.SceneFlow.LoadScene("SceneName");
 ```
 
-That gives you the scene transition — a tilted **neon wipe** (violet panel with a
-cyan/pink glowing edge that sweeps left → right, same direction the bullet flies)
-— and resets `timeScale` for free. The wipe is built in code inside
-`SceneFlowController`; tweak `wipeSeconds` / `wipeTiltDegrees` on the GameManager
-prefab's SceneFlow child.
+That gives you the neon wipe transition and resets `timeScale` for free.
 
-**Text readability over the menu video** is handled by three layers (all
-regenerated by the builder): a violet gradient scrim over the left third + a
-bottom scrim for the footer (`LeftScrim`/`BottomScrim` in the MainMenu canvas),
-a slight violet tint on the video itself (`MenuVideoLoop.videoTint`), and a dark
-cartoon outline baked into the Bungee/Chakra Petch font materials (TMP underlay)
-so every glyph carries its own contrast on any background.
+**UI lives in scenes, not in code.** The HUD used to be constructed at runtime with
+`new GameObject(...)`, which made it impossible to edit in the Inspector. It is now
+authored as real scene objects under `Canvas`, and the runtime scripts only *read*
+`[SerializeField]` references. `Tools > FIRED > Bake Runtime UI` regenerates them
+idempotently. Add new UI by authoring it in the scene and exposing a field — never
+by building it in code.
 
-## Hooking in gameplay (during the jam)
+**Levels are streamed from modules.** `ModuleStreamer` chains prefabs from
+`Prefabs/Levels/` using entry/exit sockets declared in `ModuleInfo`. All three Kenney
+kits share one socket grid (`corridor-wide` is 8×8 in every kit), so a cave module
+chains onto a station module with no seam. Unused exits are sealed with a full-width
+blocker so the player cannot leave the map.
 
-1. Build the game inside the `Game` scene (replace the `StubText`).
-2. When a run ends, fire **one event** — the UI does the rest:
-   ```csharp
-   GameEvents.RaiseGameOver(won: true);   // "You Win" screen
-   GameEvents.RaiseGameOver(won: false);  // "Game Over" screen
-   ```
-3. Optional: subscribe to `GameEvents.PauseChanged` if gameplay needs to react to pausing.
-4. Set `SaveSystem.HasSaveData = true; SaveSystem.Save();` when there's real progress
-   (makes **Continue** appear on the main menu).
+---
 
-## Videos — intro + looping menu background (zero manual wiring)
+## Editor tools — `Tools > FIRED`
 
-Drop video files anywhere under `Assets/` and name them by convention, then run
-**Tools > Jam Scaffold > Build All Scenes**:
-
-| File name contains | Used as |
+| Menu item | What it does |
 |---|---|
-| `intro`, `studio`, or `logo` | Studio intro (plays once with its own sound, then advances; placeholder text is removed automatically) |
-| `menu`, `loop`, or `bg` | Main-menu looping background (muted; hides the procedural backdrop; falls back to it if playback fails) |
-| (a single video with neither) | Treated as the studio intro |
+| Bake Runtime UI into Scenes | Rebuilds the HUD scene objects and rewires them. Safe to re-run. |
+| Build Level Module Prefabs (all kits) | Regenerates level modules for all three kits |
+| Build Example Level (into Game scene) | Rebuilds `Level_Example` and the zone wiring |
+| Regenerate UI Sprites (safe) | Re-creates the generated UI sprites. Touches no scene. |
+| Build Windows (playtest zip) | Standalone build to `../FIRED_Builds/Windows` |
+| Build WebGL (itch.io) | Web build, itch-safe compression settings |
+| **DANGER —** Rebuild Game Scene / Regenerate Menu Scenes | Destructive. Overwrites hand edits. Both confirm first. |
 
-The builder copies the file into `Assets/StreamingAssets/` and videos play **via
-URL** — this is a hard requirement for WebGL (VideoClip assets don't work there)
-and works identically in the editor/desktop. RenderTextures are created at
-runtime and the picture is cropped-to-fill; no manual assets needed.
-⚠ Don't assign clips by hand in the scenes — regeneration wipes manual edits;
-the naming convention is what survives rebuilds. Keep videos H.264 MP4 for
-browser compatibility, and remember they count toward the WebGL download size.
+Builds are written **outside** the repo (`../FIRED_Builds/`) — there is no ignore
+rule for build output.
 
-## Adding your name to the credits
+---
 
-Edit **`Assets/Resources/Credits.txt`**. Plain text; TMP rich tags work
-(`<b>`, `<size=120%>`, `<color=#FFB454>`). No scene editing needed.
+## Building
 
-## Settings, audio, saving
+For itch.io, zip the **contents** of the WebGL output so `index.html` sits at the zip
+root, then tick *"This file will be played in the browser."* WebGL uses Brotli with
+**decompression fallback enabled**, which matters: without it the build depends on the
+host sending the right `Content-Encoding` header and otherwise hangs on the loading bar.
 
-- **Settings panel** (volumes, fullscreen, resolution, reset) is one shared prefab:
-  `Assets/Prefabs/UI/SettingsPanel.prefab` — used by both Main Menu and Pause Menu.
-  Everything persists instantly via `SaveSystem` (PlayerPrefs; works on WebGL).
-- **AudioManager** (on the GameManager prefab) crossfades menu/gameplay music and plays
-  UI sounds. **All current audio is generated procedurally in code** (`ProceduralAudio.cs`)
-  so there are zero audio assets. To use real audio: assign clips in the AudioManager
-  fields on `Assets/Resources/GameManager.prefab` — empty slots fall back to generated sounds.
-- Resolution dropdown & Quit buttons hide themselves automatically on WebGL builds.
+Bump **Project Settings > Player > Version** before each upload — it is stamped on the
+main menu, bottom-left.
 
-## Visual stack (all generated — the only downloaded assets are three OFL fonts)
+---
 
-Art direction: **cartoon cyberpunk, maximum color** — matched to the jam game
-**FIRED.** (see `Docs/FIRED_GDD.md`). Text menus instead of boxed buttons, neon
-palette with color-meaning rules (cyan = interactive, pink+yellow = celebration,
-green = combos only), and a background that is a place.
-
-- **Typography** (`Assets/Art/Fonts/`, all SIL-OFL with licenses): **Bungee**
-  (titles/menu items), **Chakra Petch** (body/labels/HUD), **Bangers** (comic
-  bursts/onomatopoeia). The builder compiles TTFs into TMP font assets with
-  LiberationSans fallback.
-- **Menus are text** (`MenuItem.cs`): cyan label + triangle marker + slide on select.
-- **Backdrop** = `StarfieldBackdrop` (stars, neon nebulas, shooting stars) +
-  `CyberCityBackdrop` (striped synthwave sun, three parallax neon skylines with
-  lit windows, hover-traffic streaks). On the "Backdrop (replace with real art)"
-  object in MainMenu/Credits.
-- **PLAY fires a gunshot**: `MenuGunshot` (comic BANG! starburst + screen flash +
-  procedural bang SFX) plays before the Game scene loads.
-- **URP post-processing** everywhere: bloom (neons feed it), violet vignette, film
-  grain, chromatic aberration (`Assets/Settings/JamPostFX.asset`). Canvases are
-  *Screen Space - Camera* so UI gets graded; the fade canvas stays Overlay.
-- **Motion**: sheets/overlays fade in (`PanelAnimator` — never scales the
-  full-screen dim, only content), prompts pulse (`PulseAlpha`).
-- The epilepsy warning stays deliberately static (console-standard layout).
-- The comic starburst sprite (`Assets/Art/UI/ComicBurst.png`) is shared with the
-  game's style popups; `ProceduralAudio.GunBang` is reusable for in-game shots.
-
-## Re-skinning
-
-All placeholder colors live in **`Assets/Scripts/Core/Theme.cs`** (deep indigo + amber).
-Scenes bake colors in at build time, so either tweak scene objects directly, or change
-`Theme.cs` and regenerate everything via **Tools > Jam Scaffold > Build All Scenes**.
-⚠ Regenerating overwrites manual edits to the generated scenes/prefabs.
-
-## Keys & dev shortcuts
+## Dev shortcuts
 
 | Key | What | Where |
-|-----|------|-------|
-| Esc / P / gamepad Start | Pause | Game scene, all builds |
-| F12 | Save timestamped screenshot to `persistentDataPath/Screenshots` | All builds except WebGL |
-| F1 | Toggle FPS overlay | All builds (hide/strip before submission if you care) |
-| Ctrl+R | Restart current scene | Editor + development builds only |
-| K / L | Trigger test Win / Game Over | Editor + development builds only (`GameStub.cs`) |
+|---|---|---|
+| F1 | FPS overlay | All builds |
+| F12 | Screenshot to `persistentDataPath/Screenshots` | All builds except WebGL |
+| Ctrl+R | Reload the current scene | Editor + development builds |
+| K / L | Force Win / Game Over | Editor + development builds (`DevHotkeys.cs`) |
 
-Menus fully support keyboard/gamepad navigation (jam judges love controllers).
+---
 
-## Testing any scene directly
+## Credits & licences
 
-Just open it and press Play — the GameManager bootstraps itself. Note the epilepsy
-warning shows once per launch (static flag), so returning to it in one session skips it.
+**Art** — Kenney ([kenney.nl](https://kenney.nl), **CC0**): Modular Space Kit, Modular
+Cave Kit, Modular Dungeon Kit, Modular Buildings, Blaster Kit.
+Quaternius ([quaternius.com](https://quaternius.com), **CC0**): Modular SciFi MegaKit.
 
-## Folder convention
+**Audio** — Kenney (**CC0**). `ProceduralAudio.cs` generates fallback clips in code for
+any empty slot, so the game is never silent even with no audio assets present.
 
-```
-Assets/Scenes      all .unity files
-Assets/Scripts     Core/ (systems) · UI/ (screens) · Game/ (gameplay goes here) · Dev/ (debug tools)
-Assets/Art         sprites, models, videos (empty, ready)
-Assets/Audio       music & SFX files (empty, ready)
-Assets/Prefabs     Prefabs/UI for panel prefabs
-Assets/Resources   GameManager.prefab, Credits.txt (loaded by name at runtime — keep small)
-```
+**Fonts** — Bungee, Chakra Petch, Bangers (**SIL OFL**, licences included in
+`Assets/Art/Fonts/`).
 
-Before each upload: bump **Project Settings > Player > Version** — it's stamped on the
-main menu (bottom-left) so you always know which build a judge is playing.
+**UI sprites** — generated procedurally by the project's own editor tooling; no
+third-party source.
+
+Third-party asset licences are included in their respective folders under
+`Assets/Level/` and `Assets/Gun/`.

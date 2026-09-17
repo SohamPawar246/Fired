@@ -26,10 +26,10 @@ public static class GunPoseBuilder
     private const string PreviewScenePath = "Assets/Scenes/GunPreview.unity";
     private const string ShooterFbx = "Assets/Gunplay.fbx";
 
-    [UnityEditor.MenuItem("Tools/Jam Scaffold/Build Gun Pose Prefabs + Preview")]
+    [UnityEditor.MenuItem("Tools/FIRED/Build Gun Pose Prefabs + Preview")]
     public static void Build() => BuildInternal(overwrite: false);
 
-    [UnityEditor.MenuItem("Tools/Jam Scaffold/Reset Gun Pose Prefabs to Auto Defaults")]
+    [UnityEditor.MenuItem("Tools/FIRED/Reset Gun Pose Prefabs to Auto Defaults")]
     public static void Reset()
     {
         if (EditorUtility.DisplayDialog("Reset gun poses?",

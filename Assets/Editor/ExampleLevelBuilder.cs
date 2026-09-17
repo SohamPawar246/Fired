@@ -28,7 +28,7 @@ public static class ExampleLevelBuilder
 
     private static Transform _root;
 
-    [UnityEditor.MenuItem("Tools/Jam Scaffold/Build Example Level (into Game scene)")]
+    [UnityEditor.MenuItem("Tools/FIRED/Build Example Level (into Game scene)")]
     public static void Build()
     {
         var scene = EditorSceneManager.GetActiveScene();

@@ -63,7 +63,7 @@ public static class JamScaffoldBuilder
     /// pointer stubs (a "Download ZIP" from GitHub, or a clone without `git lfs pull`)
     /// rather than real images, and Unity imported nothing.
     /// </summary>
-    [UnityEditor.MenuItem("Tools/Jam Scaffold/Regenerate UI Sprites (safe — no scenes touched)")]
+    [UnityEditor.MenuItem("Tools/FIRED/Regenerate UI Sprites (safe — no scenes touched)")]
     public static void RegenerateArtOnly()
     {
         EnsureFolders();
@@ -74,7 +74,7 @@ public static class JamScaffoldBuilder
                   + "GUIDs are unchanged, so every scene and prefab picks them up automatically.");
     }
 
-    [UnityEditor.MenuItem("Tools/Jam Scaffold/DANGER — Rebuild Game Scene (WIPES your level!)")]
+    [UnityEditor.MenuItem("Tools/FIRED/DANGER — Rebuild Game Scene (WIPES your level!)")]
     public static void ForceRebuildGameScene()
     {
         if (!EditorUtility.DisplayDialog(
@@ -89,7 +89,7 @@ public static class JamScaffoldBuilder
         BuildAll(skipConfirm: true);
     }
 
-    [UnityEditor.MenuItem("Tools/Jam Scaffold/DANGER — Regenerate Menu Scenes (overwrites edits)")] // fully qualified: the runtime MenuItem class shadows the attribute
+    [UnityEditor.MenuItem("Tools/FIRED/DANGER — Regenerate Menu Scenes (overwrites edits)")] // fully qualified: the runtime MenuItem class shadows the attribute
     public static void BuildAll() => BuildAll(skipConfirm: false);
 
     /// <summary>

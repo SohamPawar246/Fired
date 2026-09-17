@@ -73,7 +73,7 @@ public static class SpaceModuleBuilder
     private static Kit _k;          // kit currently being built
     private static Material _mat;   // its shared tinted material
 
-    [UnityEditor.MenuItem("Tools/Jam Scaffold/Build Level Module Prefabs (all kits)")]
+    [UnityEditor.MenuItem("Tools/FIRED/Build Level Module Prefabs (all kits)")]
     public static void BuildAll()
     {
         if (!AssetDatabase.IsValidFolder("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
